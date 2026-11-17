@@ -1,0 +1,74 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рецепт</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="header-top">
+        <a class="logo" href="index.html">
+            <img src="logo.png" alt="Логотип">
+        </a>
+
+        <h1 class="site-name">ГОТОВИТЬ ПРОСТО!</h1>
+    </div>
+
+    <div class="search-line">
+        <a class="button" href="favorites.html">Избранное</a>
+        <a class="button" href="search.html">Расширенный поиск</a>
+
+        <form class="header-search" action="search.html" method="get">
+            <input type="text" name="q" placeholder="Поиск рецептов">
+        </form>
+    </div>
+</header>
+
+<main class="recipe-main">
+
+    <a class="button" href="index.html">Назад</a>
+
+    <h1 id="recipe-name">Загрузка рецепта...</h1>
+    <p id="recipe-category"></p>
+
+    <img
+        class="recipe-photo"
+        id="recipe-photo"
+        src=""
+        alt="Фото готового блюда"
+        hidden
+    >
+
+    <div class="recipe-actions">
+        <button class="button" id="favorite-button" type="button">
+            Добавить в избранное
+        </button>
+
+        <a class="button" href="index.html">К списку рецептов</a>
+    </div>
+
+    <section class="ingredients">
+        <h2>Ингредиенты</h2>
+        <ul id="ingredients-list">
+            <li>Загрузка ингредиентов...</li>
+        </ul>
+    </section>
+
+    <section class="steps">
+        <h2>Приготовление</h2>
+
+        <div id="steps-list">
+            Загрузка шагов...
+        </div>
+    </section>
+
+</main>
+
+<script src="recipe.js"></script>
+
+</body>
+</html>

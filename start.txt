@@ -1,0 +1,5 @@
+uvicorn main:app --reload
+
+cd "C:\Users\rmk\Documents\МДК 05.07 Разр и дизайн WEB приложений\frontend"
+
+python -m http.server 5500

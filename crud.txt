@@ -1,0 +1,32 @@
+Добавить рецепт			INSERT INTO recipe
+Изменить название или категорию	UPDATE recipe
+Удалить рецепт			DELETE FROM recipe
+Добавить ингредиенты		INSERT INTO ingredients_recipes
+Изменить количество ингредиента	UPDATE ingredients_recipes
+Добавить шаг приготовления	INSERT INTO recipe_step
+Изменить описание шага		UPDATE recipe_step
+Удалить шаг			DELETE FROM recipe_step
+Изменить фотографию		UPDATE recipe_step или UPDATE recipe
+
+
+
+
+
+
+
+INSERT INTO recipe (name, type_id, image_path)
+VALUES (
+    'Овощной суп',
+    1,
+    'images/recipes/vegetable_soup.jpg'
+);
+
+
+UPDATE recipe
+SET name = 'Овощной суп с картофелем'
+WHERE id = 4;
+
+
+DELETE FROM recipe
+WHERE id = 4;
+

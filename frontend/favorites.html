@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Избранное</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="header">
+    <div class="header-top">
+        <a class="logo" href="index.html">
+            <img src="logo.png" alt="Логотип">
+        </a>
+
+        <h1 class="site-name">ГОТОВИТЬ ПРОСТО!</h1>
+    </div>
+
+    <div class="search-line">
+        <a class="button" href="favorites.html">Избранное</a>
+        <a class="button" href="search.html">Расширенный поиск</a>
+        <form class="header-search" action="search.html" method="get">
+            <input type="text" name="q" placeholder="Поиск рецептов">
+        </form>
+    </div>
+</header>
+
+<main class="main">
+    <h1 class="page-title">Избранное</h1>
+
+    <div class="recipe-list" id="recipe-list">
+        <p>Загрузка избранного...</p>
+    </div>
+</main>
+
+<script src="favorites.js"></script>
+</body>
+</html>
