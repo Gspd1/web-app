@@ -8,58 +8,57 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="header">
-    <div class="header-top">
-        <a class="logo" href="index.html">
-            <img src="logo.png" alt="Логотип">
-        </a>
+    <header class="header">
+        <div class="header-top">
+            <a class="logo" href="index.html">
+                <img src="logo.png" alt="Логотип">
+            </a>
 
-        <h1 class="site-name">ГОТОВИТЬ ПРОСТО!</h1>
-    </div>
-
-    <div class="search-line">
-        <a class="button" href="favorites.html">Избранное</a>
-        <a class="button" href="search.html">Расширенный поиск</a>
-        <form class="header-search" action="search.html" method="get">
-            <input type="text" name="q" placeholder="Поиск рецептов">
-            <button class="button" type="submit">Поиск</button>
-        </form>
-    </div>
-</header>
-
-<main class="main">
-    <h1 class="page-title">Расширенный поиск</h1>
-
-    <form class="search-form" id="search-form">
-
-        <!-- Категории будут загружаться из базы данных -->
-        <section class="filter-section">
-            <h2>Категории</h2>
-            <div id="category-filters">
-                <p>Загрузка категорий...</p>
-            </div>
-        </section>
-
-        <!-- Ингредиенты будут загружаться из базы данных -->
-        <section class="filter-section">
-            <h2>Ингредиенты</h2>
-            <div id="ingredient-filters">
-                <p>Загрузка ингредиентов...</p>
-            </div>
-        </section>
-
-        <button class="button" type="submit">Найти рецепты</button>
-    </form>
-
-    <!-- Здесь будут отображаться найденные рецепты -->
-    <section class="search-results">
-        <h2>Результаты поиска</h2>
-        <div class="recipe-list" id="recipe-list">
-            <p>Выберите фильтры и нажмите «Найти рецепты».</p>
+            <h1 class="site-name">ГОТОВИТЬ ПРОСТО!</h1>
         </div>
-    </section>
-</main>
 
-<script src="search.js"></script>
+        <div class="search-line">
+            <a class="button" href="favorites.html">Избранное</a>
+            <a class="button" href="search.html">Расширенный поиск</a>
+            <form class="header-search" action="search.html" method="get">
+                <input type="text" name="q" placeholder="Поиск рецептов">
+                <button class="button" type="submit">Поиск</button>
+            </form>
+        </div>
+    </header>
+
+    <main class="main">
+        <h1 class="page-title">Расширенный поиск</h1>
+
+        <form class="search-form" id="search-form">
+
+            <!-- Категории будут загружаться из базы данных -->
+            <section class="filter-section">
+                <h2>Категории</h2>
+                <div id="category-filters">
+                    <p>Загрузка категорий...</p>
+                </div>
+            </section>
+
+            <!-- Ингредиенты будут загружаться из базы данных -->
+            <section class="filter-section">
+                <h2>Ингредиенты</h2>
+                <div id="ingredient-filters">
+                    <p>Загрузка ингредиентов...</p>
+                </div>
+            </section>
+
+            <button class="button" type="submit">Найти рецепты</button>
+        </form>
+
+        <!-- Здесь будут отображаться найденные рецепты -->
+        <section class="search-results">
+            <h2>Результаты поиска</h2>
+            <div class="recipe-list" id="recipe-list">
+                <p>Выберите фильтры и нажмите «Найти рецепты».</p>
+            </div>
+        </section>
+    </main>
+    <script src="search.js"></script>
 </body>
 </html>
