@@ -12,6 +12,7 @@ from kivy.graphics import StencilPush, StencilUse, StencilUnUse, StencilPop
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.network.urlrequest import UrlRequest
 from kivy.uix.image import AsyncImage
+from kivy.storage.jsonstore import JsonStore
 
 # Размер окна для разработки на компьютере
 Window.size = (400, 700)
@@ -60,6 +61,8 @@ class MainScreen(Screen):
 class RecipeScreen(Screen):
     pass
 
+class FavoriteScreen(Screen):
+    pass
 
 
 
@@ -130,6 +133,24 @@ class RecipeApp(App):
             keep_ratio=False
         )
         recipe_layout.add_widget(recipe_image)
+
+        # Кнопка добавления в избранное
+        favorite_button = Button(
+            text="Удалить из избранного" if self.favorites_store.exists(str(recipe["id"]))
+            else "Добавить в избранное",
+            size_hint_y=None,
+            height=45,
+            font_size=16
+        )
+
+        style_button(favorite_button)
+
+        favorite_button.bind(
+            on_press=lambda instance:
+            self.toggle_favorite(recipe["id"], instance)
+        )
+
+        recipe_layout.add_widget(favorite_button)
 
         # Заголовок ингредиентов
         ingredients_title = Label(
@@ -215,14 +236,124 @@ class RecipeApp(App):
 
 
 
-    def on_start(self):
-        # Отправляем запрос к FastAPI
-        UrlRequest(
-            "http://127.0.0.1:8000/recipes",
-            on_success=self.recipes_loaded,
-            on_error=self.request_error,
-            on_failure=self.request_error
+    def toggle_favorite(self, recipe_id, button):
+        # Превращаем ID в строку для хранилища
+        key = str(recipe_id)
+
+        # Если рецепт уже в избранном — удаляем
+        if self.favorites_store.exists(key):
+            self.favorites_store.delete(key)
+            button.text = "Добавить в избранное"
+            print("Рецепт удалён из избранного")
+
+        # Если рецепта нет — добавляем
+        else:
+            self.favorites_store.put(key, recipe_id=recipe_id)
+            button.text = "Удалить из избранного"
+            print("Рецепт добавлен в избранное")
+
+    def show_favorites(self):
+        # Очищаем предыдущий экран
+        self.favorite_screen.clear_widgets()
+
+        # Создаём основной макет
+        layout = BoxLayout(
+            orientation="vertical",
+            padding=15,
+            spacing=10
         )
+
+        # Заголовок
+        title = Label(
+            text="Избранное",
+            font_size=24,
+            color=(0.13, 0.09, 0.05, 1),
+            size_hint_y=None,
+            height=50
+        )
+        layout.add_widget(title)
+
+        # Кнопка возврата
+        back_button = Button(
+            text="Все рецепты",
+            size_hint_y=None,
+            height=45
+        )
+        style_button(back_button)
+        back_button.bind(
+            on_press=lambda instance:
+            setattr(self.screen_manager, "current", "main")
+        )
+        layout.add_widget(back_button)
+
+        # Область прокрутки
+        scroll = ScrollView()
+
+        recipes_layout = GridLayout(
+            cols=2,
+            spacing=15,
+            padding=5,
+            size_hint_y=None
+        )
+
+        recipes_layout.bind(
+            minimum_height=recipes_layout.setter("height")
+        )
+
+        # Получаем ID избранных рецептов
+        favorite_ids = [
+            int(key) for key in self.favorites_store.keys()
+        ]
+
+        # Ищем их среди загруженных рецептов
+        for recipe in self.recipes:
+            if recipe["id"] in favorite_ids:
+
+                card = BoxLayout(
+                    orientation="vertical",
+                    size_hint_y=None,
+                    height=200,
+                    padding=10,
+                    spacing=5
+                )
+
+                create_container(card, (0.49, 0.34, 0.13, 1))
+
+                recipe_image = AsyncImage(
+                    source="http://127.0.0.1:8000/" + recipe["image_path"],
+                    size_hint=(1, 0.8),
+                    allow_stretch=True,
+                    keep_ratio=False
+                )
+
+                recipe_name = Label(
+                    text=recipe["name"],
+                    font_size=16,
+                    color=(0.13, 0.09, 0.05, 1),
+                    size_hint=(1, 0.2)
+                )
+
+                card.add_widget(recipe_image)
+                card.add_widget(recipe_name)
+
+                card.bind(
+                    on_touch_down=lambda instance, touch, recipe_id=recipe["id"]:
+                    self.open_recipe(recipe_id)
+                    if instance.collide_point(*touch.pos)
+                    else None
+                )
+
+                recipes_layout.add_widget(card)
+
+        scroll.add_widget(recipes_layout)
+        layout.add_widget(scroll)
+
+        self.favorite_screen.add_widget(layout)
+
+        # Открываем экран избранного
+        self.screen_manager.current = "favorites"
+
+
 
     def recipes_loaded(self, request, data):
         print("Рецепты успешно загружены!")
@@ -282,6 +413,9 @@ class RecipeApp(App):
 
 
     def build(self):
+        # Создаём хранилище избранных рецептов
+        self.favorites_store = JsonStore("favorites.json")
+
         # Создаём менеджер экранов
         self.screen_manager = ScreenManager()
 
@@ -291,9 +425,12 @@ class RecipeApp(App):
         # Создаём экран отдельного рецепта
         self.recipe_screen = RecipeScreen(name="recipe")
 
+        self.favorite_screen = FavoriteScreen(name="favorites")
+
         # Добавляем экраны в менеджер
         self.screen_manager.add_widget(self.main_screen)
         self.screen_manager.add_widget(self.recipe_screen)
+        self.screen_manager.add_widget(self.favorite_screen)
 
 
         # Главный макет
@@ -423,6 +560,9 @@ class RecipeApp(App):
         style_button(all_recipes_button)
         style_button(search_button)
         style_button(favorites_button)
+        favorites_button.bind(
+            on_press=lambda instance: self.show_favorites()
+        )
 
         # Добавляем панель на главный экран
         main_layout.add_widget(navigation)
