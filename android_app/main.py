@@ -80,11 +80,20 @@ class RecipeApp(App):
         # Очищаем предыдущую страницу
         self.recipe_screen.clear_widgets()
 
-        # Создаём основной макет страницы
+        # Создаём прокручиваемую область
+        scroll = ScrollView()
+
+        # Создаём макет для содержимого рецепта
         recipe_layout = BoxLayout(
             orientation="vertical",
             padding=15,
-            spacing=10
+            spacing=10,
+            size_hint_y=None
+        )
+
+        # Высота макета будет зависеть от его содержимого
+        recipe_layout.bind(
+            minimum_height=recipe_layout.setter("height")
         )
 
         # Кнопка возврата
@@ -143,8 +152,54 @@ class RecipeApp(App):
             )
             recipe_layout.add_widget(ingredient_label)
 
-        # Добавляем страницу в экран
-        self.recipe_screen.add_widget(recipe_layout)
+        # Заголовок приготовления
+        steps_title = Label(
+            text="Приготовление",
+            font_size=20,
+            color=(0.13, 0.09, 0.05, 1),
+            size_hint_y=None,
+            height=45
+        )
+        recipe_layout.add_widget(steps_title)
+
+        # Выводим каждый шаг приготовления
+        for step in data["steps"]:
+
+            # Номер и описание шага
+            step_label = Label(
+                text=f'{step["recipe_step_number"]}. {step["recipe_step_description"]}',
+                font_size=16,
+                color=(0.13, 0.09, 0.05, 1),
+                size_hint_y=None,
+                height=80,
+                halign="left",
+                valign="middle"
+            )
+
+            step_label.bind(
+                width=lambda instance, value:
+                setattr(instance, "text_size", (value, None))
+            )
+
+            recipe_layout.add_widget(step_label)
+
+            # Если у шага есть фотография, показываем её
+            if step["recipe_step_image"] is not None:
+                step_image = AsyncImage(
+                    source="http://127.0.0.1:8000/" + step["recipe_step_image"],
+                    size_hint_y=None,
+                    height=160,
+                    allow_stretch=True,
+                    keep_ratio=False
+                )
+
+                recipe_layout.add_widget(step_image)
+
+        # Добавляем содержимое в прокручиваемую область
+        scroll.add_widget(recipe_layout)
+
+        # Добавляем прокрутку на экран рецепта
+        self.recipe_screen.add_widget(scroll)
 
         # Открываем страницу рецепта
         self.screen_manager.current = "recipe"
