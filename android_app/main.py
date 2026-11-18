@@ -16,6 +16,11 @@ from kivy.storage.jsonstore import JsonStore
 from kivy.uix.togglebutton import ToggleButton
 from urllib.parse import urlencode
 
+
+# Адрес сервера FastAPI
+API_URL = "http://127.0.0.1:8000"
+
+
 # Размер окна для разработки на компьютере
 Window.size = (400, 700)
 
@@ -138,7 +143,7 @@ class SearchScreen(Screen):
 class RecipeApp(App):
     def open_recipe(self, recipe_id):
         UrlRequest(
-            f"http://127.0.0.1:8000/recipes/{recipe_id}",
+            f"{API_URL}/recipes/{recipe_id}",
             on_success=self.recipe_details_loaded,
             on_error=self.request_error,
             on_failure=self.request_error
@@ -195,7 +200,7 @@ class RecipeApp(App):
 
         # Фотография блюда
         recipe_image = RoundedAsyncImage(
-            source="http://127.0.0.1:8000/" + recipe["image_path"],
+            source=API_URL + recipe["image_path"],
             size_hint_y=None,
             height=200,
             allow_stretch=True,
@@ -276,7 +281,7 @@ class RecipeApp(App):
             # Если у шага есть фотография, показываем её
             if step["recipe_step_image"] is not None:
                 step_image = RoundedAsyncImage(
-                    source="http://127.0.0.1:8000/" + step["recipe_step_image"],
+                    source=API_URL+ step["recipe_step_image"],
                     size_hint_y=None,
                     height=160,
                     allow_stretch=True,
@@ -299,7 +304,7 @@ class RecipeApp(App):
     def on_start(self):
         # Отправляем запрос к FastAPI
         UrlRequest(
-            "http://127.0.0.1:8000/recipes",
+            f"{API_URL}/recipes",
             on_success=self.recipes_loaded,
             on_error=self.request_error,
             on_failure=self.request_error
@@ -392,7 +397,7 @@ class RecipeApp(App):
                 create_container(card, (0.49, 0.34, 0.13, 1))
 
                 recipe_image = RoundedAsyncImage(
-                    source="http://127.0.0.1:8000/" + recipe["image_path"],
+                    source=API_URL + recipe["image_path"],
                     size_hint=(1, 0.8),
                     allow_stretch=True,
                     keep_ratio=False
@@ -598,14 +603,14 @@ class RecipeApp(App):
 
         # Загружаем категории и ингредиенты из базы
         UrlRequest(
-            "http://127.0.0.1:8000/recipe-types",
+            f"{API_URL}/recipe-types",
             on_success=self.categories_loaded,
             on_error=self.request_error,
             on_failure=self.request_error
         )
 
         UrlRequest(
-            "http://127.0.0.1:8000/ingredients",
+            f"{API_URL}/ingredients",
             on_success=self.ingredients_loaded,
             on_error=self.request_error,
             on_failure=self.request_error
@@ -758,7 +763,7 @@ class RecipeApp(App):
         # Кодируем параметры для URL
         query_string = urlencode(params)
 
-        url = "http://127.0.0.1:8000/search"
+        url = f"{API_URL}/search"
 
         if query_string:
             url += "?" + query_string
@@ -796,7 +801,7 @@ class RecipeApp(App):
             create_container(card, (0.49, 0.34, 0.13, 1))
 
             recipe_image = RoundedAsyncImage(
-                source="http://127.0.0.1:8000/" + recipe["image_path"],
+                source=API_URL + recipe["image_path"],
                 size_hint=(1, 0.8),
                 allow_stretch=True,
                 keep_ratio=False
@@ -827,7 +832,7 @@ class RecipeApp(App):
         # Если поле пустое — показываем весь каталог
         if not query:
             UrlRequest(
-                "http://127.0.0.1:8000/recipes",
+                API_URL,
                 on_success=self.recipes_loaded,
                 on_error=self.request_error,
                 on_failure=self.request_error
@@ -838,7 +843,7 @@ class RecipeApp(App):
         params = urlencode({"q": query})
 
         UrlRequest(
-            f"http://127.0.0.1:8000/search?{params}",
+            f"{API_URL}/search?{params}",
             on_success=self.name_search_loaded,
             on_error=self.request_error,
             on_failure=self.request_error
@@ -872,7 +877,7 @@ class RecipeApp(App):
             create_container(card, (0.49, 0.34, 0.13, 1))
 
             recipe_image = RoundedAsyncImage(
-                source="http://127.0.0.1:8000/" + recipe["image_path"],
+                source=API_URL + recipe["image_path"],
                 size_hint=(1, 0.8),
                 allow_stretch=True,
                 keep_ratio=False
@@ -925,7 +930,7 @@ class RecipeApp(App):
 
             # Загружаем фотографию с сервера
             recipe_image = RoundedAsyncImage(
-                source="http://127.0.0.1:8000/" + recipe["image_path"],
+                source=API_URL + recipe["image_path"],
                 size_hint=(1, 0.8),
                 allow_stretch=True,
                 keep_ratio=False
@@ -1152,7 +1157,7 @@ class RecipeApp(App):
             on_press=lambda instance: (
                 setattr(self.screen_manager, "current", "main"),
                 UrlRequest(
-                    "http://127.0.0.1:8000/recipes",
+                    f"{API_URL}/recipes",
                     on_success=self.recipes_loaded,
                     on_error=self.request_error,
                     on_failure=self.request_error
