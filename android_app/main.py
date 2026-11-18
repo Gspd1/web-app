@@ -361,23 +361,18 @@ class RecipeApp(App):
         # Открываем экран избранного
         self.screen_manager.current = "favorites"
 
-
-
     def show_search(self):
-        # Списки выбранных категорий и ингредиентов
         self.selected_category_ids = set()
         self.selected_ingredient_ids = set()
 
-        # Очищаем экран
         self.search_screen.clear_widgets()
 
-        # Создаём прокручиваемую область
         scroll = ScrollView()
 
         content = BoxLayout(
             orientation="vertical",
             padding=15,
-            spacing=10,
+            spacing=12,
             size_hint_y=None
         )
 
@@ -385,13 +380,14 @@ class RecipeApp(App):
             minimum_height=content.setter("height")
         )
 
-        # Заголовок
+        # Заголовок страницы
         title = Label(
-            text="Поиск рецептов",
+            text="Расширенный поиск",
             font_size=24,
+            bold=True,
             color=(0.13, 0.09, 0.05, 1),
             size_hint_y=None,
-            height=50
+            height=55
         )
         content.add_widget(title)
 
@@ -402,90 +398,126 @@ class RecipeApp(App):
             height=45
         )
         style_button(back_button)
+
         back_button.bind(
             on_press=lambda instance:
             setattr(self.screen_manager, "current", "main")
         )
+
         content.add_widget(back_button)
 
-        # Категории
-        content.add_widget(Label(
+        # Общий контейнер формы поиска
+        form_box = BoxLayout(
+            orientation="vertical",
+            padding=15,
+            spacing=10,
+            size_hint_y=None
+        )
+
+        form_box.bind(
+            minimum_height=form_box.setter("height")
+        )
+
+        create_container(form_box, (0.79, 0.60, 0.29, 1))
+
+        # Раздел категорий
+        categories_title = Label(
             text="Категории",
-            font_size=20,
+            font_size=23,
+            bold=True,
             color=(0.13, 0.09, 0.05, 1),
             size_hint_y=None,
-            height=40
-        ))
+            height=45,
+            halign="left"
+        )
+        form_box.add_widget(categories_title)
 
         self.categories_box = BoxLayout(
             orientation="vertical",
             size_hint_y=None,
             spacing=5
         )
+
         self.categories_box.bind(
             minimum_height=self.categories_box.setter("height")
         )
-        content.add_widget(self.categories_box)
 
-        # Ингредиенты
-        content.add_widget(Label(
+        form_box.add_widget(self.categories_box)
+
+        # Раздел ингредиентов
+        ingredients_title = Label(
             text="Ингредиенты",
-            font_size=20,
+            font_size=23,
+            bold=True,
             color=(0.13, 0.09, 0.05, 1),
             size_hint_y=None,
-            height=40
-        ))
+            height=45,
+            halign="left"
+        )
+        form_box.add_widget(ingredients_title)
 
         self.ingredients_box = BoxLayout(
             orientation="vertical",
             size_hint_y=None,
             spacing=5
         )
+
         self.ingredients_box.bind(
             minimum_height=self.ingredients_box.setter("height")
         )
-        content.add_widget(self.ingredients_box)
 
-        # Кнопка поиска
+        form_box.add_widget(self.ingredients_box)
+
+        # Кнопка поиска внутри общего контейнера
         find_button = Button(
             text="Найти рецепты",
             size_hint_y=None,
-            height=50
+            height=50,
+            font_size=17
         )
+
         style_button(find_button)
+
         find_button.bind(
             on_press=lambda instance: self.search_recipes()
         )
-        content.add_widget(find_button)
 
-        # Заголовок результатов
-        content.add_widget(Label(
+        form_box.add_widget(find_button)
+
+        # Добавляем общую форму на страницу
+        content.add_widget(form_box)
+
+        # Результаты поиска
+        results_title = Label(
             text="Результаты поиска",
-            font_size=20,
+            font_size=21,
+            bold=True,
             color=(0.13, 0.09, 0.05, 1),
             size_hint_y=None,
-            height=45
-        ))
+            height=50
+        )
 
-        # Сетка результатов в два столбца
+        content.add_widget(results_title)
+
         self.search_results_layout = GridLayout(
             cols=2,
             spacing=15,
             padding=5,
             size_hint_y=None
         )
+
         self.search_results_layout.bind(
             minimum_height=self.search_results_layout.setter("height")
         )
+
         content.add_widget(self.search_results_layout)
 
         scroll.add_widget(content)
         self.search_screen.add_widget(scroll)
 
-        # Открываем экран поиска
         self.screen_manager.current = "search"
 
-        # Загружаем категории и ингредиенты из API
+        # Загружаем категории и ингредиенты из базы
         UrlRequest(
             "http://127.0.0.1:8000/recipe-types",
             on_success=self.categories_loaded,
@@ -506,6 +538,22 @@ class RecipeApp(App):
         else:
             selected_ids.discard(item_id)
 
+    def update_filter_toggle(self, button, state, selected_ids, item_id):
+        self.update_selection(
+            selected_ids,
+            item_id,
+            state == "down"
+        )
+
+        if state == "down":
+            button.text = "X"
+            button.background_color = (0.49, 0.34, 0.13, 1)
+            button.color = (1, 1, 1, 1)
+        else:
+            button.text = ""
+            button.background_color = (0.89, 0.86, 0.83, 1)
+            button.color = (0.13, 0.09, 0.05, 1)
+
     def categories_loaded(self, request, data):
         self.categories_box.clear_widgets()
 
@@ -513,33 +561,28 @@ class RecipeApp(App):
             row = BoxLayout(
                 orientation="horizontal",
                 size_hint_y=None,
-                height=45,
-                spacing=10
+                height=42,
+                spacing=12
             )
 
             checkbox = ToggleButton(
-                text="☐",
+                text="",
                 size_hint=(None, None),
-                size=(45, 40),
-                font_size=24,
+                size=(28, 28),
                 background_normal="",
                 background_down="",
-                background_color=(0.79, 0.60, 0.29, 1),
+                background_color=(0.89, 0.86, 0.83, 1),
                 color=(0.13, 0.09, 0.05, 1)
             )
 
             checkbox.bind(
                 state=lambda instance, value, item_id=category["id"]:
-                self.update_selection(
+                self.update_filter_toggle(
+                    instance,
+                    value,
                     self.selected_category_ids,
-                    item_id,
-                    value == "down"
+                    item_id
                 )
-            )
-
-            checkbox.bind(
-                state=lambda instance, value:
-                setattr(instance, "text", "☑" if value == "down" else "☐")
             )
 
             label = Label(
@@ -551,12 +594,12 @@ class RecipeApp(App):
 
             row.add_widget(checkbox)
             row.add_widget(label)
+
             self.categories_box.add_widget(row)
 
     def ingredients_loaded(self, request, data):
         self.ingredients_box.clear_widgets()
 
-        # Группируем ингредиенты по типам
         grouped = {}
 
         for ingredient in data:
@@ -567,7 +610,6 @@ class RecipeApp(App):
 
             grouped[ingredient_type].append(ingredient)
 
-        # Выводим группы и ингредиенты
         for ingredient_type, ingredients in grouped.items():
 
             type_label = Label(
@@ -576,7 +618,8 @@ class RecipeApp(App):
                 bold=True,
                 color=(0.13, 0.09, 0.05, 1),
                 size_hint_y=None,
-                height=40
+                height=38,
+                halign="left"
             )
 
             self.ingredients_box.add_widget(type_label)
@@ -585,33 +628,28 @@ class RecipeApp(App):
                 row = BoxLayout(
                     orientation="horizontal",
                     size_hint_y=None,
-                    height=45,
-                    spacing=10
+                    height=42,
+                    spacing=12
                 )
 
                 checkbox = ToggleButton(
-                    text="☐",
+                    text="",
                     size_hint=(None, None),
-                    size=(45, 40),
-                    font_size=24,
+                    size=(28, 28),
                     background_normal="",
                     background_down="",
-                    background_color=(0.79, 0.60, 0.29, 1),
+                    background_color=(0.89, 0.86, 0.83, 1),
                     color=(0.13, 0.09, 0.05, 1)
                 )
 
                 checkbox.bind(
                     state=lambda instance, value, item_id=ingredient["id"]:
-                    self.update_selection(
+                    self.update_filter_toggle(
+                        instance,
+                        value,
                         self.selected_ingredient_ids,
-                        item_id,
-                        value == "down"
+                        item_id
                     )
-                )
-
-                checkbox.bind(
-                    state=lambda instance, value:
-                    setattr(instance, "text", "☑" if value == "down" else "☐")
                 )
 
                 label = Label(
@@ -623,6 +661,7 @@ class RecipeApp(App):
 
                 row.add_widget(checkbox)
                 row.add_widget(label)
+
                 self.ingredients_box.add_widget(row)
 
     def search_recipes(self):
