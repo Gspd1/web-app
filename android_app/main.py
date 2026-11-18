@@ -73,8 +73,81 @@ class RecipeApp(App):
         )
 
     def recipe_details_loaded(self, request, data):
-        print("Данные рецепта успешно загружены!")
-        print(data)
+        # Получаем данные рецепта
+        recipe = data["recipe"]
+        ingredients = data["ingredients"]
+
+        # Очищаем предыдущую страницу
+        self.recipe_screen.clear_widgets()
+
+        # Создаём основной макет страницы
+        recipe_layout = BoxLayout(
+            orientation="vertical",
+            padding=15,
+            spacing=10
+        )
+
+        # Кнопка возврата
+        back_button = Button(
+            text="Назад",
+            size_hint_y=None,
+            height=45
+        )
+        style_button(back_button)
+
+        back_button.bind(
+            on_press=lambda instance:
+            setattr(self.screen_manager, "current", "main")
+        )
+
+        recipe_layout.add_widget(back_button)
+
+        # Название блюда
+        title = Label(
+            text=recipe["name"],
+            font_size=24,
+            color=(0.13, 0.09, 0.05, 1),
+            size_hint_y=None,
+            height=50
+        )
+        recipe_layout.add_widget(title)
+
+        # Фотография блюда
+        recipe_image = AsyncImage(
+            source="http://127.0.0.1:8000/" + recipe["image_path"],
+            size_hint_y=None,
+            height=200,
+            allow_stretch=True,
+            keep_ratio=False
+        )
+        recipe_layout.add_widget(recipe_image)
+
+        # Заголовок ингредиентов
+        ingredients_title = Label(
+            text="Ингредиенты",
+            font_size=20,
+            color=(0.13, 0.09, 0.05, 1),
+            size_hint_y=None,
+            height=40
+        )
+        recipe_layout.add_widget(ingredients_title)
+
+        # Выводим список ингредиентов
+        for ingredient in ingredients:
+            ingredient_label = Label(
+                text=f'{ingredient["name"]} — {ingredient["amount"]} {ingredient["unit"]}',
+                font_size=16,
+                color=(0.13, 0.09, 0.05, 1),
+                size_hint_y=None,
+                height=30
+            )
+            recipe_layout.add_widget(ingredient_label)
+
+        # Добавляем страницу в экран
+        self.recipe_screen.add_widget(recipe_layout)
+
+        # Открываем страницу рецепта
+        self.screen_manager.current = "recipe"
 
     def on_start(self):
         # Отправляем запрос к FastAPI
