@@ -113,62 +113,72 @@ class RecipeApp(App):
             on_failure=self.request_error
         )
 
-    d
-def recipes_loaded(self, request, data):
-    print("Рецепты успешно загружены!")
 
-    # Сохраняем полученные рецепты
-    self.recipes = data
 
-    # Очищаем список карточек
-    self.recipes_layout.clear_widgets()
-
-    # Создаём карточки из данных базы
-    for recipe in self.recipes:
-
-        card = BoxLayout(
-            orientation="vertical",
-            size_hint_y=None,
-            height=200,
-            padding=10,
-            spacing=5
+    def on_start(self):
+        # Отправляем запрос к FastAPI
+        UrlRequest(
+            "http://127.0.0.1:8000/recipes",
+            on_success=self.recipes_loaded,
+            on_error=self.request_error,
+            on_failure=self.request_error
         )
 
-        create_container(card, (0.49, 0.34, 0.13, 1))
+    def recipes_loaded(self, request, data):
+        print("Рецепты успешно загружены!")
 
-        # Загружаем фотографию с сервера
-        recipe_image = AsyncImage(
-            source="http://127.0.0.1:8000/" + recipe["image_path"],
-            size_hint=(1, 0.8),
-            allow_stretch=True,
-            keep_ratio=False
-        )
+        # Сохраняем полученные рецепты
+        self.recipes = data
 
-        # Название рецепта
-        recipe_name = Label(
-            text=recipe["name"],
-            font_size=16,
-            color=(0.13, 0.09, 0.05, 1),
-            size_hint=(1, 0.2)
-        )
+        # Очищаем список карточек
+        self.recipes_layout.clear_widgets()
 
-        card.add_widget(recipe_image)
-        card.add_widget(recipe_name)
+        # Создаём карточки из данных базы
+        for recipe in self.recipes:
 
-        # Переход на страницу рецепта
-        card.bind(
-            on_touch_down=lambda instance, touch, name=recipe["name"]:
-            self.open_recipe(name)
-            if instance.collide_point(*touch.pos)
-            else None
-        )
+            card = BoxLayout(
+                orientation="vertical",
+                size_hint_y=None,
+                height=200,
+                padding=10,
+                spacing=5
+            )
 
-        self.recipes_layout.add_widget(card)
+            create_container(card, (0.49, 0.34, 0.13, 1))
 
+            # Загружаем фотографию с сервера
+            recipe_image = AsyncImage(
+                source="http://127.0.0.1:8000/" + recipe["image_path"],
+                size_hint=(1, 0.8),
+                allow_stretch=True,
+                keep_ratio=False
+            )
+
+            # Название рецепта
+            recipe_name = Label(
+                text=recipe["name"],
+                font_size=16,
+                color=(0.13, 0.09, 0.05, 1),
+                size_hint=(1, 0.2)
+            )
+
+            card.add_widget(recipe_image)
+            card.add_widget(recipe_name)
+
+            # Переход на страницу рецепта
+            card.bind(
+                on_touch_down=lambda instance, touch, name=recipe["name"]:
+                self.open_recipe(name)
+                if instance.collide_point(*touch.pos)
+                else None
+            )
+
+            self.recipes_layout.add_widget(card)
 
     def request_error(self, request, error):
         print("Ошибка загрузки рецептов:")
         print(error)
+
 
 
     def build(self):
@@ -264,52 +274,7 @@ def recipes_loaded(self, request, data):
             minimum_height=self.recipes_layout.setter("height")
         )
 
-        # Тестовые рецепты
-        recipes = [
-            ("Куриный суп", "../images/chicken_soup.jpg"),
-            ("Салат с креветками", "../images/shrimp_salad.jpg"),
-            ("Шоколадный кекс", "../images/chocolate_cake.jpg")
-        ]
-
-        # Создаём карточки
-        for name, image_path in recipes:
-            card = BoxLayout(
-                orientation="vertical",
-                size_hint_y=None,
-                height=200,
-                padding=10,
-                spacing=5
-            )
-
-            create_container(card, (0.49, 0.34, 0.13, 1))
-
-            # Фотография блюда
-            recipe_image = Image(
-                source=image_path,
-                size_hint=(1, 0.8),
-                allow_stretch=True,
-                keep_ratio=False
-            )
-
-            # Название блюда под фотографией
-            recipe_name = Label(
-                text=name,
-                font_size=16,
-                color=(0.13, 0.09, 0.05, 1),
-                size_hint=(1, 0.2)
-            )
-
-            card.add_widget(recipe_image)
-            card.add_widget(recipe_name)
-
-            recipes_layout.add_widget(card)
-            card.bind(
-                on_touch_down=lambda instance, touch, name=name:
-                self.open_recipe(name)
-                if instance.collide_point(*touch.pos)
-                else None
-            )
-
+        
         # Добавляем список в прокручиваемую область
         scroll.add_widget(self.recipes_layout)
         main_layout.add_widget(scroll)
