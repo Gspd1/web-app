@@ -523,13 +523,27 @@ class RecipeApp(App):
             font_size=17,
             background_normal="",
             background_down="",
-            background_color=(0.49, 0.34, 0.13, 1),
-            color=(0.13, 0.09, 0.05, 1)
+            background_color=(0, 0, 0, 0),
+            color=(1, 1, 1, 1)
         )
 
-        style_button(find_button)
+        with find_button.canvas.before:
+            Color(0.49, 0.34, 0.13, 1)
+            find_button.bg = RoundedRectangle(
+                pos=find_button.pos,
+                size=find_button.size,
+                radius=[12]
+            )
+
         find_button.bind(
-            on_press=lambda instance: self.search_recipes()
+            pos=lambda instance, value:
+            setattr(find_button.bg, "pos", value),
+            size=lambda instance, value:
+            setattr(find_button.bg, "size", value)
+        )
+
+        find_button.bind(
+            on_release=lambda instance: self.search_recipes()
         )
 
         form_box.add_widget(find_button)
