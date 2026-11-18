@@ -911,14 +911,13 @@ class RecipeApp(App):
             spacing=10
         )
 
-        # Верхняя часть экрана
         # Верхний контейнер
         header = BoxLayout(
             orientation="vertical",
             size_hint_y=None,
-            height=120,
-            padding=12,
-            spacing=10
+            height=140,
+            padding=10,
+            spacing=5
         )
 
         create_container(header, (0.79, 0.60, 0.29, 1))
@@ -980,14 +979,16 @@ class RecipeApp(App):
         )
 
         name_search_button.bind(
-            on_press=lambda instance:
-            self.search_by_name(self.search_input.text)
+            on_press=lambda instance: (
+                print("Кнопка поиска нажата!"),
+                self.search_by_name(self.search_input.text)
+            )
         )
 
         # Поиск также запускается нажатием Enter
         self.search_input.bind(
-            on_text_validate=lambda instance:
-            self.search_by_name(self.search_input.text)
+            on_focus=lambda instance, value:
+            print("Поле поиска получило фокус:", value)
         )
 
         search_row.add_widget(self.search_input)

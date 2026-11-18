@@ -220,10 +220,11 @@ function showRecipes(recipes) {
 
 
 // Подключаем обработчик кнопки поиска
-document.getElementById("search-form").addEventListener(
-    "submit",
-    searchRecipes
-);
+const searchForm = document.getElementById("search-form");
+
+if (searchForm) {
+    searchForm.addEventListener("submit", searchRecipes);
+}
 
 
 // Загружаем фильтры при открытии страницы
