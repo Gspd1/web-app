@@ -1,5 +1,43 @@
 const API_URL = "http://127.0.0.1:8000";
 
+
+// Обычный поиск только по названию рецепта
+async function searchByName(query) {
+    const recipeList = document.getElementById("recipe-list");
+
+    if (!query.trim()) {
+        recipeList.textContent =
+            "Введите название рецепта для поиска.";
+        return;
+    }
+
+    recipeList.textContent = "Ищем рецепты...";
+
+    try {
+        const params = new URLSearchParams();
+        params.set("q", query.trim());
+
+        const response = await fetch(
+            `${API_URL}/search?${params.toString()}`
+        );
+
+        if (!response.ok) {
+            throw new Error("Ошибка поиска");
+        }
+
+        const recipes = await response.json();
+
+        showRecipes(recipes);
+
+    } catch (error) {
+        console.error("Ошибка поиска:", error);
+
+        recipeList.textContent =
+            "Не удалось выполнить поиск. Проверьте работу сервера.";
+    }
+}
+
+
 // Загружаем категории и ингредиенты при открытии страницы
 async function loadFilters() {
     try {
@@ -190,3 +228,11 @@ document.getElementById("search-form").addEventListener(
 
 // Загружаем фильтры при открытии страницы
 loadFilters();
+
+// Проверяем, был ли выполнен обычный поиск по названию
+const urlParams = new URLSearchParams(window.location.search);
+const searchQuery = urlParams.get("q");
+
+if (searchQuery !== null) {
+    searchByName(searchQuery);
+}

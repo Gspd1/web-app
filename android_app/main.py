@@ -473,10 +473,12 @@ class RecipeApp(App):
             text="Найти рецепты",
             size_hint_y=None,
             height=50,
-            font_size=17
+            font_size=17,
+            background_normal="",
+            background_down="",
+            background_color=(0.49, 0.34, 0.13, 1),
+            color=(0.13, 0.09, 0.05, 1)
         )
-
-        style_button(find_button)
 
         find_button.bind(
             on_press=lambda instance: self.search_recipes()
@@ -740,6 +742,84 @@ class RecipeApp(App):
 
             self.search_results_layout.add_widget(card)
 
+    def search_by_name(self, query):
+        query = query.strip()
+
+        # Если поле пустое — показываем весь каталог
+        if not query:
+            UrlRequest(
+                "http://127.0.0.1:8000/recipes",
+                on_success=self.recipes_loaded,
+                on_error=self.request_error,
+                on_failure=self.request_error
+            )
+            return
+
+        # Формируем запрос с названием рецепта
+        params = urlencode({"q": query})
+
+        UrlRequest(
+            f"http://127.0.0.1:8000/search?{params}",
+            on_success=self.name_search_loaded,
+            on_error=self.request_error,
+            on_failure=self.request_error
+        )
+
+    def name_search_loaded(self, request, data):
+        # Очищаем предыдущие карточки
+        self.recipes_layout.clear_widgets()
+
+        if not data:
+            self.recipes_layout.add_widget(
+                Label(
+                    text="Рецепты не найдены",
+                    color=(0.13, 0.09, 0.05, 1),
+                    size_hint_y=None,
+                    height=60
+                )
+            )
+            return
+
+        # Выводим найденные рецепты
+        for recipe in data:
+            card = BoxLayout(
+                orientation="vertical",
+                size_hint_y=None,
+                height=200,
+                padding=10,
+                spacing=5
+            )
+
+            create_container(card, (0.49, 0.34, 0.13, 1))
+
+            recipe_image = AsyncImage(
+                source="http://127.0.0.1:8000/" + recipe["image_path"],
+                size_hint=(1, 0.8),
+                allow_stretch=True,
+                keep_ratio=False
+            )
+
+            recipe_name = Label(
+                text=recipe["name"],
+                font_size=16,
+                color=(0.13, 0.09, 0.05, 1),
+                size_hint=(1, 0.2)
+            )
+
+            card.add_widget(recipe_image)
+            card.add_widget(recipe_name)
+
+            card.bind(
+                on_touch_down=lambda instance, touch, recipe_id=recipe["id"]:
+                self.open_recipe(recipe_id)
+                if instance.collide_point(*touch.pos)
+                else None
+            )
+
+            self.recipes_layout.add_widget(card)
+
+
+
 
 
     def recipes_loaded(self, request, data):
@@ -851,37 +931,73 @@ class RecipeApp(App):
             height=50
         )
 
-        # Поле поиска
-        search = TextInput(
-            hint_text="Найти рецепт...",
+        # Строка обычного поиска
+        search_row = BoxLayout(
+            orientation="horizontal",
             size_hint_y=None,
             height=45,
-            multiline=False
+            spacing=5
         )
 
-        with search.canvas.before:
+        # Поле ввода названия рецепта
+        self.search_input = TextInput(
+            hint_text="Найти рецепт...",
+            size_hint_x=0.75,
+            multiline=False,
+            font_size=15
+        )
+
+        with self.search_input.canvas.before:
             Color(1, 1, 1, 1)
-            search.bg = RoundedRectangle(
-                pos=search.pos,
-                size=search.size,
+            self.search_input.bg = RoundedRectangle(
+                pos=self.search_input.pos,
+                size=self.search_input.size,
                 radius=[8]
             )
 
-        search.bind(
-            pos=lambda instance, value: setattr(search.bg, "pos", value),
-            size=lambda instance, value: setattr(search.bg, "size", value)
+        self.search_input.bind(
+            pos=lambda instance, value:
+            setattr(self.search_input.bg, "pos", value),
+            size=lambda instance, value:
+            setattr(self.search_input.bg, "size", value)
         )
 
-        search.background_color = (0, 0, 0, 0)
-        search.background_normal = ""
-        search.background_active = ""
-        search.foreground_color = (0.13, 0.09, 0.05, 1)
-        search.cursor_color = (0.13, 0.09, 0.05, 1)
+        self.search_input.background_color = (0, 0, 0, 0)
+        self.search_input.background_normal = ""
+        self.search_input.background_active = ""
+        self.search_input.foreground_color = (0.13, 0.09, 0.05, 1)
+        self.search_input.cursor_color = (0.13, 0.09, 0.05, 1)
+
+        # Кнопка обычного поиска
+        name_search_button = Button(
+            text="Поиск",
+            size_hint_x=0.25,
+            font_size=14,
+            background_normal="",
+            background_down="",
+            background_color=(0.49, 0.34, 0.13, 1),
+            color=(0.13, 0.09, 0.05, 1)
+        )
+
+        name_search_button.bind(
+            on_press=lambda instance:
+            self.search_by_name(self.search_input.text)
+        )
+
+        # Поиск также запускается нажатием Enter
+        self.search_input.bind(
+            on_text_validate=lambda instance:
+            self.search_by_name(self.search_input.text)
+        )
+
+        search_row.add_widget(self.search_input)
+        search_row.add_widget(name_search_button)
 
 
         # Добавляем заголовок и поиск в шапку
         header.add_widget(title)
-        header.add_widget(search)
+        header.add_widget(search_row)
+
 
         # Добавляем шапку на главный экран
         main_layout.add_widget(header)

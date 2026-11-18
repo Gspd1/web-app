@@ -104,16 +104,16 @@ def get_recipes():
 
 
 
-# Поиск рецептов по категориям и ингредиентам
+# Поиск рецептов по названию, категориям и ингредиентам
 @app.get("/search")
 def search_recipes(
+    q: str = Query(default=""),
     category_ids: list[int] = Query(default=[]),
     ingredient_ids: list[int] = Query(default=[])
 ):
     connection = get_connection()
     cursor = connection.cursor()
 
-    # Основной SQL-запрос
     sql = """
         SELECT
             recipe.id,
@@ -128,6 +128,11 @@ def search_recipes(
     """
 
     parameters = []
+
+    # Поиск по названию рецепта
+    if q.strip():
+        sql += " AND recipe.name ILIKE %s"
+        parameters.append(f"%{q.strip()}%")
 
     # Фильтр по категориям
     if category_ids:
