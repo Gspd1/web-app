@@ -13,7 +13,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.network.urlrequest import UrlRequest
 from kivy.uix.image import AsyncImage
 from kivy.storage.jsonstore import JsonStore
-from kivy.uix.checkbox import CheckBox
+from kivy.uix.togglebutton import ToggleButton
 from urllib.parse import urlencode
 
 # Размер окна для разработки на компьютере
@@ -513,25 +513,38 @@ class RecipeApp(App):
             row = BoxLayout(
                 orientation="horizontal",
                 size_hint_y=None,
-                height=40
+                height=45,
+                spacing=10
             )
 
-            checkbox = CheckBox(
-                size_hint_x=None,
-                width=45
+            checkbox = ToggleButton(
+                text="☐",
+                size_hint=(None, None),
+                size=(45, 40),
+                font_size=24,
+                background_normal="",
+                background_down="",
+                background_color=(0.79, 0.60, 0.29, 1),
+                color=(0.13, 0.09, 0.05, 1)
             )
 
             checkbox.bind(
-                active=lambda instance, value, item_id=category["id"]:
+                state=lambda instance, value, item_id=category["id"]:
                 self.update_selection(
                     self.selected_category_ids,
                     item_id,
-                    value
+                    value == "down"
                 )
+            )
+
+            checkbox.bind(
+                state=lambda instance, value:
+                setattr(instance, "text", "☑" if value == "down" else "☐")
             )
 
             label = Label(
                 text=category["name"],
+                font_size=16,
                 color=(0.13, 0.09, 0.05, 1),
                 halign="left"
             )
@@ -559,36 +572,51 @@ class RecipeApp(App):
 
             type_label = Label(
                 text=ingredient_type,
-                font_size=17,
+                font_size=18,
+                bold=True,
                 color=(0.13, 0.09, 0.05, 1),
                 size_hint_y=None,
-                height=35
+                height=40
             )
+
             self.ingredients_box.add_widget(type_label)
 
             for ingredient in ingredients:
                 row = BoxLayout(
                     orientation="horizontal",
                     size_hint_y=None,
-                    height=40
+                    height=45,
+                    spacing=10
                 )
 
-                checkbox = CheckBox(
-                    size_hint_x=None,
-                    width=45
+                checkbox = ToggleButton(
+                    text="☐",
+                    size_hint=(None, None),
+                    size=(45, 40),
+                    font_size=24,
+                    background_normal="",
+                    background_down="",
+                    background_color=(0.79, 0.60, 0.29, 1),
+                    color=(0.13, 0.09, 0.05, 1)
                 )
 
                 checkbox.bind(
-                    active=lambda instance, value, item_id=ingredient["id"]:
+                    state=lambda instance, value, item_id=ingredient["id"]:
                     self.update_selection(
                         self.selected_ingredient_ids,
                         item_id,
-                        value
+                        value == "down"
                     )
+                )
+
+                checkbox.bind(
+                    state=lambda instance, value:
+                    setattr(instance, "text", "☑" if value == "down" else "☐")
                 )
 
                 label = Label(
                     text=ingredient["name"],
+                    font_size=16,
                     color=(0.13, 0.09, 0.05, 1),
                     halign="left"
                 )
