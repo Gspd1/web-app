@@ -11,6 +11,7 @@ from kivy.graphics import Color, RoundedRectangle
 from kivy.graphics import StencilPush, StencilUse, StencilUnUse, StencilPop
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.network.urlrequest import UrlRequest
+from kivy.uix.image import AsyncImage
 
 # Размер окна для разработки на компьютере
 Window.size = (400, 700)
@@ -112,10 +113,58 @@ class RecipeApp(App):
             on_failure=self.request_error
         )
 
-    def recipes_loaded(self, request, data):
-        # Выводим полученные рецепты в консоль
-        print("Рецепты успешно загружены!")
-        print(data)
+    d
+def recipes_loaded(self, request, data):
+    print("Рецепты успешно загружены!")
+
+    # Сохраняем полученные рецепты
+    self.recipes = data
+
+    # Очищаем список карточек
+    self.recipes_layout.clear_widgets()
+
+    # Создаём карточки из данных базы
+    for recipe in self.recipes:
+
+        card = BoxLayout(
+            orientation="vertical",
+            size_hint_y=None,
+            height=200,
+            padding=10,
+            spacing=5
+        )
+
+        create_container(card, (0.49, 0.34, 0.13, 1))
+
+        # Загружаем фотографию с сервера
+        recipe_image = AsyncImage(
+            source="http://127.0.0.1:8000/" + recipe["image_path"],
+            size_hint=(1, 0.8),
+            allow_stretch=True,
+            keep_ratio=False
+        )
+
+        # Название рецепта
+        recipe_name = Label(
+            text=recipe["name"],
+            font_size=16,
+            color=(0.13, 0.09, 0.05, 1),
+            size_hint=(1, 0.2)
+        )
+
+        card.add_widget(recipe_image)
+        card.add_widget(recipe_name)
+
+        # Переход на страницу рецепта
+        card.bind(
+            on_touch_down=lambda instance, touch, name=recipe["name"]:
+            self.open_recipe(name)
+            if instance.collide_point(*touch.pos)
+            else None
+        )
+
+        self.recipes_layout.add_widget(card)
+
 
     def request_error(self, request, error):
         print("Ошибка загрузки рецептов:")
@@ -203,15 +252,16 @@ class RecipeApp(App):
         scroll = ScrollView()
 
         # Макет для карточек рецептов
-        recipes_layout = GridLayout(
+        # Макет для карточек рецептов
+        self.recipes_layout = GridLayout(
             cols=2,
             spacing=15,
             size_hint_y=None,
             padding=5
         )
 
-        recipes_layout.bind(
-            minimum_height=recipes_layout.setter("height")
+        self.recipes_layout.bind(
+            minimum_height=self.recipes_layout.setter("height")
         )
 
         # Тестовые рецепты
@@ -261,7 +311,7 @@ class RecipeApp(App):
             )
 
         # Добавляем список в прокручиваемую область
-        scroll.add_widget(recipes_layout)
+        scroll.add_widget(self.recipes_layout)
         main_layout.add_widget(scroll)
 
         # Цвет фона приложения
