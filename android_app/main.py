@@ -56,6 +56,23 @@ def style_button(button):
     button.color = (0, 0, 0, 1)
 
 
+def create_rounded_background(widget, color, radius=12):
+    with widget.canvas.before:
+        Color(*color)
+        widget.rounded_bg = RoundedRectangle(
+            pos=widget.pos,
+            size=widget.size,
+            radius=[radius]
+        )
+
+    widget.bind(
+        pos=lambda instance, value:
+        setattr(widget.rounded_bg, "pos", value),
+        size=lambda instance, value:
+        setattr(widget.rounded_bg, "size", value)
+    )
+
+
 def style_toggle_button(button):
     with button.canvas.before:
         button.bg_color = Color(0.89, 0.86, 0.83, 1)
@@ -515,11 +532,23 @@ class RecipeApp(App):
 
         form_box.add_widget(self.ingredients_box)
 
-        # Кнопка поиска внутри общего контейнера
-        find_button = Button(
-            text="Найти рецепты",
+        # Контейнер кнопки
+        find_button_box = BoxLayout(
+            orientation="horizontal",
             size_hint_y=None,
             height=50,
+            padding=0
+        )
+
+        create_rounded_background(
+            find_button_box,
+            (0.49, 0.34, 0.13, 1),
+            12
+        )
+
+        # Прозрачная кнопка поверх фона
+        find_button = Button(
+            text="Найти рецепты",
             font_size=17,
             background_normal="",
             background_down="",
@@ -527,26 +556,12 @@ class RecipeApp(App):
             color=(1, 1, 1, 1)
         )
 
-        with find_button.canvas.before:
-            Color(0.49, 0.34, 0.13, 1)
-            find_button.bg = RoundedRectangle(
-                pos=find_button.pos,
-                size=find_button.size,
-                radius=[12]
-            )
-
-        find_button.bind(
-            pos=lambda instance, value:
-            setattr(find_button.bg, "pos", value),
-            size=lambda instance, value:
-            setattr(find_button.bg, "size", value)
-        )
-
         find_button.bind(
             on_release=lambda instance: self.search_recipes()
         )
 
-        form_box.add_widget(find_button)
+        find_button_box.add_widget(find_button)
+        form_box.add_widget(find_button_box)
 
         # Добавляем общую форму на страницу
         content.add_widget(form_box)
@@ -998,35 +1013,42 @@ class RecipeApp(App):
         search_row = BoxLayout(
             orientation="horizontal",
             size_hint_y=None,
-            height=45,
-            spacing=5
+            height=40,
+            spacing=7
         )
 
-        # Поле ввода названия рецепта
+        # Контейнер со скруглённым белым фоном
+        search_input_box = BoxLayout(
+            orientation="horizontal",
+            size_hint_x=0.75,
+            padding=2
+        )
+
+        create_rounded_background(
+            search_input_box,
+            (1, 1, 1, 1),
+            12
+        )
+
+        # Само поле ввода
         self.search_input = TextInput(
             hint_text="Найти рецепт...",
-            size_hint_x=0.75,
             multiline=False,
             font_size=16,
             foreground_color=(0.13, 0.09, 0.05, 1),
             cursor_color=(0.13, 0.09, 0.05, 1),
             background_normal="",
             background_active="",
-            background_color=(1, 1, 1, 1),
-            padding=[10, 10]
+            background_color=(0, 0, 0, 0),
+            padding=[10, 8]
         )
 
-        # Проверяем, получает ли поле фокус
-        self.search_input.bind(
-            on_focus=lambda instance, value:
-            print("Поле поиска получило фокус:", value)
-        )
-
-        # Поиск по нажатию Enter
         self.search_input.bind(
             on_text_validate=lambda instance:
             self.search_by_name(instance.text)
         )
+
+        search_input_box.add_widget(self.search_input)
 
         # Кнопка поиска
         name_search_button = Button(
@@ -1035,8 +1057,14 @@ class RecipeApp(App):
             font_size=14,
             background_normal="",
             background_down="",
-            background_color=(0.49, 0.34, 0.13, 1),
-            color=(0.13, 0.09, 0.05, 1)
+            background_color=(0, 0, 0, 0),
+            color=(1, 1, 1, 1)
+        )
+
+        create_rounded_background(
+            name_search_button,
+            (0.49, 0.34, 0.13, 1),
+            12
         )
 
         name_search_button.bind(
@@ -1044,8 +1072,7 @@ class RecipeApp(App):
             self.search_by_name(self.search_input.text)
         )
 
-        # Добавляем поле и кнопку в строку
-        search_row.add_widget(self.search_input)
+        search_row.add_widget(search_input_box)
         search_row.add_widget(name_search_button)
 
         # Добавляем заголовок и поиск в шапку
