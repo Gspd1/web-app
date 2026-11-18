@@ -922,7 +922,7 @@ class RecipeApp(App):
 
         create_container(header, (0.79, 0.60, 0.29, 1))
 
-        # Название приложения
+        # Заголовок
         title = Label(
             text="Каталог рецептов",
             font_size=26,
@@ -930,7 +930,7 @@ class RecipeApp(App):
             height=50
         )
 
-        # Строка обычного поиска
+        # Строка поиска
         search_row = BoxLayout(
             orientation="horizontal",
             size_hint_y=None,
@@ -943,31 +943,28 @@ class RecipeApp(App):
             hint_text="Найти рецепт...",
             size_hint_x=0.75,
             multiline=False,
-            font_size=15
+            font_size=16,
+            foreground_color=(0.13, 0.09, 0.05, 1),
+            cursor_color=(0.13, 0.09, 0.05, 1),
+            background_normal="",
+            background_active="",
+            background_color=(1, 1, 1, 1),
+            padding=[10, 10]
         )
 
-        with self.search_input.canvas.before:
-            Color(1, 1, 1, 1)
-            self.search_input.bg = RoundedRectangle(
-                pos=self.search_input.pos,
-                size=self.search_input.size,
-                radius=[8]
-            )
-
+        # Проверяем, получает ли поле фокус
         self.search_input.bind(
-            pos=lambda instance, value:
-            setattr(self.search_input.bg, "pos", value),
-            size=lambda instance, value:
-            setattr(self.search_input.bg, "size", value)
+            on_focus=lambda instance, value:
+            print("Поле поиска получило фокус:", value)
         )
 
-        self.search_input.background_color = (0, 0, 0, 0)
-        self.search_input.background_normal = ""
-        self.search_input.background_active = ""
-        self.search_input.foreground_color = (0.13, 0.09, 0.05, 1)
-        self.search_input.cursor_color = (0.13, 0.09, 0.05, 1)
+        # Поиск по нажатию Enter
+        self.search_input.bind(
+            on_text_validate=lambda instance:
+            self.search_by_name(instance.text)
+        )
 
-        # Кнопка обычного поиска
+        # Кнопка поиска
         name_search_button = Button(
             text="Поиск",
             size_hint_x=0.25,
@@ -979,26 +976,17 @@ class RecipeApp(App):
         )
 
         name_search_button.bind(
-            on_press=lambda instance: (
-                print("Кнопка поиска нажата!"),
-                self.search_by_name(self.search_input.text)
-            )
+            on_release=lambda instance:
+            self.search_by_name(self.search_input.text)
         )
 
-        # Поиск также запускается нажатием Enter
-        self.search_input.bind(
-            on_focus=lambda instance, value:
-            print("Поле поиска получило фокус:", value)
-        )
-
+        # Добавляем поле и кнопку в строку
         search_row.add_widget(self.search_input)
         search_row.add_widget(name_search_button)
-
 
         # Добавляем заголовок и поиск в шапку
         header.add_widget(title)
         header.add_widget(search_row)
-
 
         # Добавляем шапку на главный экран
         main_layout.add_widget(header)
