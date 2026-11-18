@@ -64,45 +64,17 @@ class RecipeScreen(Screen):
 
 
 class RecipeApp(App):
-    def open_recipe(self, recipe_name):
-        # Очищаем страницу рецепта
-        self.recipe_screen.clear_widgets()
-
-        # Создаём макет страницы
-        layout = BoxLayout(
-            orientation="vertical",
-            padding=15,
-            spacing=15
+    def open_recipe(self, recipe_id):
+        UrlRequest(
+            f"http://127.0.0.1:8000/recipes/{recipe_id}",
+            on_success=self.recipe_details_loaded,
+            on_error=self.request_error,
+            on_failure=self.request_error
         )
 
-        # Кнопка возврата
-        back_button = Button(
-            text="Назад",
-            size_hint_y=None,
-            height=45
-        )
-
-        style_button(back_button)
-
-        back_button.bind(
-            on_release=lambda instance:
-            setattr(self.screen_manager, "current", "main")
-        )
-
-        # Название рецепта
-        title = Label(
-            text=recipe_name,
-            font_size=26,
-            color=(0.13, 0.09, 0.05, 1)
-        )
-
-        layout.add_widget(back_button)
-        layout.add_widget(title)
-
-        self.recipe_screen.add_widget(layout)
-
-        # Открываем страницу
-        self.screen_manager.current = "recipe"
+    def recipe_details_loaded(self, request, data):
+        print("Данные рецепта успешно загружены!")
+        print(data)
 
     def on_start(self):
         # Отправляем запрос к FastAPI
@@ -167,8 +139,8 @@ class RecipeApp(App):
 
             # Переход на страницу рецепта
             card.bind(
-                on_touch_down=lambda instance, touch, name=recipe["name"]:
-                self.open_recipe(name)
+                on_touch_down=lambda instance, touch, recipe_id=recipe["id"]:
+                self.open_recipe(recipe_id)
                 if instance.collide_point(*touch.pos)
                 else None
             )
@@ -274,7 +246,7 @@ class RecipeApp(App):
             minimum_height=self.recipes_layout.setter("height")
         )
 
-        
+
         # Добавляем список в прокручиваемую область
         scroll.add_widget(self.recipes_layout)
         main_layout.add_widget(scroll)
