@@ -3,6 +3,7 @@ const API_URL = "http://127.0.0.1:8000";
 
 // Обычный поиск только по названию рецепта
 async function searchByName(query) {
+    console.log("Функция поиска запущена. Запрос:", query);
     const recipeList = document.getElementById("recipe-list");
 
     if (!query.trim()) {
