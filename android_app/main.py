@@ -13,6 +13,8 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.network.urlrequest import UrlRequest
 from kivy.uix.image import AsyncImage
 from kivy.storage.jsonstore import JsonStore
+from kivy.uix.checkbox import CheckBox
+from urllib.parse import urlencode
 
 # Размер окна для разработки на компьютере
 Window.size = (400, 700)
@@ -62,6 +64,9 @@ class RecipeScreen(Screen):
     pass
 
 class FavoriteScreen(Screen):
+    pass
+
+class SearchScreen(Screen):
     pass
 
 
@@ -225,6 +230,8 @@ class RecipeApp(App):
         # Открываем страницу рецепта
         self.screen_manager.current = "recipe"
 
+
+
     def on_start(self):
         # Отправляем запрос к FastAPI
         UrlRequest(
@@ -293,6 +300,7 @@ class RecipeApp(App):
             cols=2,
             spacing=15,
             padding=5,
+            size_hint_x=1,
             size_hint_y=None
         )
 
@@ -352,6 +360,318 @@ class RecipeApp(App):
 
         # Открываем экран избранного
         self.screen_manager.current = "favorites"
+
+
+
+    def show_search(self):
+        # Списки выбранных категорий и ингредиентов
+        self.selected_category_ids = set()
+        self.selected_ingredient_ids = set()
+
+        # Очищаем экран
+        self.search_screen.clear_widgets()
+
+        # Создаём прокручиваемую область
+        scroll = ScrollView()
+
+        content = BoxLayout(
+            orientation="vertical",
+            padding=15,
+            spacing=10,
+            size_hint_y=None
+        )
+
+        content.bind(
+            minimum_height=content.setter("height")
+        )
+
+        # Заголовок
+        title = Label(
+            text="Поиск рецептов",
+            font_size=24,
+            color=(0.13, 0.09, 0.05, 1),
+            size_hint_y=None,
+            height=50
+        )
+        content.add_widget(title)
+
+        # Кнопка возврата
+        back_button = Button(
+            text="Все рецепты",
+            size_hint_y=None,
+            height=45
+        )
+        style_button(back_button)
+        back_button.bind(
+            on_press=lambda instance:
+            setattr(self.screen_manager, "current", "main")
+        )
+        content.add_widget(back_button)
+
+        # Категории
+        content.add_widget(Label(
+            text="Категории",
+            font_size=20,
+            color=(0.13, 0.09, 0.05, 1),
+            size_hint_y=None,
+            height=40
+        ))
+
+        self.categories_box = BoxLayout(
+            orientation="vertical",
+            size_hint_y=None,
+            spacing=5
+        )
+        self.categories_box.bind(
+            minimum_height=self.categories_box.setter("height")
+        )
+        content.add_widget(self.categories_box)
+
+        # Ингредиенты
+        content.add_widget(Label(
+            text="Ингредиенты",
+            font_size=20,
+            color=(0.13, 0.09, 0.05, 1),
+            size_hint_y=None,
+            height=40
+        ))
+
+        self.ingredients_box = BoxLayout(
+            orientation="vertical",
+            size_hint_y=None,
+            spacing=5
+        )
+        self.ingredients_box.bind(
+            minimum_height=self.ingredients_box.setter("height")
+        )
+        content.add_widget(self.ingredients_box)
+
+        # Кнопка поиска
+        find_button = Button(
+            text="Найти рецепты",
+            size_hint_y=None,
+            height=50
+        )
+        style_button(find_button)
+        find_button.bind(
+            on_press=lambda instance: self.search_recipes()
+        )
+        content.add_widget(find_button)
+
+        # Заголовок результатов
+        content.add_widget(Label(
+            text="Результаты поиска",
+            font_size=20,
+            color=(0.13, 0.09, 0.05, 1),
+            size_hint_y=None,
+            height=45
+        ))
+
+        # Сетка результатов в два столбца
+        self.search_results_layout = GridLayout(
+            cols=2,
+            spacing=15,
+            padding=5,
+            size_hint_y=None
+        )
+        self.search_results_layout.bind(
+            minimum_height=self.search_results_layout.setter("height")
+        )
+        content.add_widget(self.search_results_layout)
+
+        scroll.add_widget(content)
+        self.search_screen.add_widget(scroll)
+
+        # Открываем экран поиска
+        self.screen_manager.current = "search"
+
+        # Загружаем категории и ингредиенты из API
+        UrlRequest(
+            "http://127.0.0.1:8000/recipe-types",
+            on_success=self.categories_loaded,
+            on_error=self.request_error,
+            on_failure=self.request_error
+        )
+
+        UrlRequest(
+            "http://127.0.0.1:8000/ingredients",
+            on_success=self.ingredients_loaded,
+            on_error=self.request_error,
+            on_failure=self.request_error
+        )
+
+    def update_selection(self, selected_ids, item_id, active):
+        if active:
+            selected_ids.add(item_id)
+        else:
+            selected_ids.discard(item_id)
+
+    def categories_loaded(self, request, data):
+        self.categories_box.clear_widgets()
+
+        for category in data:
+            row = BoxLayout(
+                orientation="horizontal",
+                size_hint_y=None,
+                height=40
+            )
+
+            checkbox = CheckBox(
+                size_hint_x=None,
+                width=45
+            )
+
+            checkbox.bind(
+                active=lambda instance, value, item_id=category["id"]:
+                self.update_selection(
+                    self.selected_category_ids,
+                    item_id,
+                    value
+                )
+            )
+
+            label = Label(
+                text=category["name"],
+                color=(0.13, 0.09, 0.05, 1),
+                halign="left"
+            )
+
+            row.add_widget(checkbox)
+            row.add_widget(label)
+            self.categories_box.add_widget(row)
+
+    def ingredients_loaded(self, request, data):
+        self.ingredients_box.clear_widgets()
+
+        # Группируем ингредиенты по типам
+        grouped = {}
+
+        for ingredient in data:
+            ingredient_type = ingredient["type_name"]
+
+            if ingredient_type not in grouped:
+                grouped[ingredient_type] = []
+
+            grouped[ingredient_type].append(ingredient)
+
+        # Выводим группы и ингредиенты
+        for ingredient_type, ingredients in grouped.items():
+
+            type_label = Label(
+                text=ingredient_type,
+                font_size=17,
+                color=(0.13, 0.09, 0.05, 1),
+                size_hint_y=None,
+                height=35
+            )
+            self.ingredients_box.add_widget(type_label)
+
+            for ingredient in ingredients:
+                row = BoxLayout(
+                    orientation="horizontal",
+                    size_hint_y=None,
+                    height=40
+                )
+
+                checkbox = CheckBox(
+                    size_hint_x=None,
+                    width=45
+                )
+
+                checkbox.bind(
+                    active=lambda instance, value, item_id=ingredient["id"]:
+                    self.update_selection(
+                        self.selected_ingredient_ids,
+                        item_id,
+                        value
+                    )
+                )
+
+                label = Label(
+                    text=ingredient["name"],
+                    color=(0.13, 0.09, 0.05, 1),
+                    halign="left"
+                )
+
+                row.add_widget(checkbox)
+                row.add_widget(label)
+                self.ingredients_box.add_widget(row)
+
+    def search_recipes(self):
+        # Формируем параметры запроса
+        params = []
+
+        for category_id in sorted(self.selected_category_ids):
+            params.append(("category_ids", category_id))
+
+        for ingredient_id in sorted(self.selected_ingredient_ids):
+            params.append(("ingredient_ids", ingredient_id))
+
+        # Кодируем параметры для URL
+        query_string = urlencode(params)
+
+        url = "http://127.0.0.1:8000/search"
+
+        if query_string:
+            url += "?" + query_string
+
+        UrlRequest(
+            url,
+            on_success=self.search_results_loaded,
+            on_error=self.request_error,
+            on_failure=self.request_error
+        )
+
+    def search_results_loaded(self, request, data):
+        self.search_results_layout.clear_widgets()
+
+        if not data:
+            self.search_results_layout.add_widget(
+                Label(
+                    text="Рецепты не найдены",
+                    color=(0.13, 0.09, 0.05, 1),
+                    size_hint_y=None,
+                    height=50
+                )
+            )
+            return
+
+        for recipe in data:
+            card = BoxLayout(
+                orientation="vertical",
+                size_hint=(1, None),
+                height=200,
+                padding=10,
+                spacing=5
+            )
+
+            create_container(card, (0.49, 0.34, 0.13, 1))
+
+            recipe_image = AsyncImage(
+                source="http://127.0.0.1:8000/" + recipe["image_path"],
+                size_hint=(1, 0.8),
+                allow_stretch=True,
+                keep_ratio=False
+            )
+
+            recipe_name = Label(
+                text=recipe["name"],
+                font_size=16,
+                color=(0.13, 0.09, 0.05, 1),
+                size_hint=(1, 0.2)
+            )
+
+            card.add_widget(recipe_image)
+            card.add_widget(recipe_name)
+
+            card.bind(
+                on_touch_down=lambda instance, touch, recipe_id=recipe["id"]:
+                self.open_recipe(recipe_id)
+                if instance.collide_point(*touch.pos)
+                else None
+            )
+
+            self.search_results_layout.add_widget(card)
 
 
 
@@ -427,10 +747,14 @@ class RecipeApp(App):
 
         self.favorite_screen = FavoriteScreen(name="favorites")
 
+        # Создаём экран поиска
+        self.search_screen = SearchScreen(name="search")
+
         # Добавляем экраны в менеджер
         self.screen_manager.add_widget(self.main_screen)
         self.screen_manager.add_widget(self.recipe_screen)
         self.screen_manager.add_widget(self.favorite_screen)
+        self.screen_manager.add_widget(self.search_screen)
 
 
         # Главный макет
@@ -562,6 +886,9 @@ class RecipeApp(App):
         style_button(favorites_button)
         favorites_button.bind(
             on_press=lambda instance: self.show_favorites()
+        )
+        search_button.bind(
+            on_press=lambda instance: self.show_search()
         )
 
         # Добавляем панель на главный экран
